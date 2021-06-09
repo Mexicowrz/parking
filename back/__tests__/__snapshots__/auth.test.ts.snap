@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Check authorization GET /current admin request 1`] = `
+Object {
+  "description": null,
+  "firstname": "А",
+  "flat": null,
+  "id": 1,
+  "lastname": "Администратор",
+  "middlename": null,
+  "role": 0,
+  "username": "admin",
+}
+`;
+
+exports[`Check authorization POST /login admin success login 1`] = `
+Object {
+  "description": null,
+  "firstname": "А",
+  "flat": null,
+  "id": 1,
+  "lastname": "Администратор",
+  "middlename": null,
+  "role": 0,
+  "username": "admin",
+}
+`;

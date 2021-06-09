@@ -1,0 +1,14 @@
+{
+  "apps": [
+    {
+      "exec_mode": "cluster",
+      "cwd": "/app/back/build",
+      "script": "server.js",
+      "name": "APP",
+      "node_args": [ "--abort-on-uncaught-exception", "--max-old-space-size=8192", "--expose-gc" ],
+      "error_file": "/home/ubuntu/parking/logs/app.err.log",
+      "out_file": "/home/ubuntu/parking/logs/app.out.log",
+      "log_date_format": "YYYY-MM-DD HH:mm Z"
+    }
+  ]
+}
