@@ -4,6 +4,7 @@ import ApiHelper, {
   IdParams,
 } from '../helpers/ApiHelper';
 import { IsNumber, IsDateString } from 'class-validator';
+import { Response } from 'express';
 import UserPlaceUpdater from '../services/UserPlaceUpdater';
 
 /**
@@ -64,6 +65,64 @@ export type Place = {
 };
 
 /**
+ * Стуктура хранения данных личных мест
+ */
+export type MyPlaceRes = {
+  /** Response потока */
+  res: Response;
+  /** логин пользователя */
+  username: string;
+  /** список доступных мест пользователя */
+  placeList: number[];
+};
+
+/**
+ * Структуа хранения свободных мест
+ */
+export type FreePlaceRes = {
+  /** Response потока */
+  res: Response;
+  /** логин пользователя */
+  username: string;
+};
+
+/**
+ * Структура хранения данных свободных мест
+ */
+export type FreePlace = {
+  /** id места */
+  place_id: number;
+  /** дата, с которой место считается свободным */
+  date_from?: Date;
+  /** дата, до которой место считается свободным */
+  date_to?: Date;
+  /** id пользователя, занявшего место */
+  customer_user_id: number;
+  /** состояние места */
+  status: PlaceStatus;
+  /** дата, с которой пользователь занял место */
+  customer_date_from?: Date;
+  /** дата, до которой пользователь занял место */
+  customer_date_to?: Date;
+  /** логин пользователя - владельца места */
+  username: string;
+  /** № места */
+  number: number;
+};
+
+/**
+ * Структура хранения пользовательского места
+ */
+export type UserPlace = {
+  /** id места */
+  id: number;
+  /** № места */
+  number: number;
+  /** в случае, если место выставлено в свободное пользование, заполняется данными об этом */
+  free?: FreePlace;
+};
+
+/**
  * Список функций в БД для работы с местами
  */
 const dbFunctions = {
@@ -77,6 +136,10 @@ const dbFunctions = {
   TAKE_FREE: 'park.e_take_free_place',
   /** освободить занятое место */
   RELEASE_FREE: 'park.e_release_free_place',
+  /** получить список пользовательских мест */
+  GET_USER_PLACE_LIST: 'park.e_get_user_places',
+  /** получить список свободных мест */
+  GET_FREE_PLACE_LIST: 'park.e_get_free_place_list',
 };
 
 /**
@@ -168,3 +231,23 @@ export const releaseFreePlace = changePlaceHOF(
       params.id,
     ]),
 );
+
+/**
+ * Получить места пользователя
+ *
+ * @param  {string} username
+ * @returns {UserPlace[]}
+ */
+export const getUserPlaceList = async (username: string) =>
+  ApiHelper.executeDbFunction<UserPlace[]>(dbFunctions.GET_USER_PLACE_LIST, [
+    username,
+  ]);
+
+/**
+ * Получить сводобные места
+ *
+ * @param  {string} username
+ * @returns {UserPlace[]}
+ */
+export const getFreePlaceList = async () =>
+  ApiHelper.executeDbFunction<FreePlace[]>(dbFunctions.GET_FREE_PLACE_LIST, []);

@@ -30,7 +30,7 @@ class App {
     this.app.use(
       cors({
         exposedHeaders: ['token'],
-        methods: ['GET', 'PUT', 'POST', 'DELETE', 'COPY'],
+        methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH'],
       }),
     );
     const options: cors.CorsOptions = {

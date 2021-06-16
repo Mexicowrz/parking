@@ -2,76 +2,15 @@ import { Response, Request } from 'express';
 import Connection from './PgConnection';
 import ApiHelper from '../helpers/ApiHelper';
 import logger from './logger';
-import { PlaceStatus } from '../models/Place';
+import {
+  MyPlaceRes,
+  FreePlaceRes,
+  UserPlace,
+  getUserPlaceList,
+  getFreePlaceList,
+  FreePlace,
+} from '../models/Place';
 import PlaceDateChecker from './PlaceDateChecker';
-
-/**
- * Стуктура хранения данных личных мест
- */
-type MyPlaceRes = {
-  /** Response потока */
-  res: Response;
-  /** логин пользователя */
-  username: string;
-  /** список доступных мест пользователя */
-  placeList: number[];
-};
-
-/**
- * Структуа хранения свободных мест
- */
-type FreePlaceRes = {
-  /** Response потока */
-  res: Response;
-  /** логин пользователя */
-  username: string;
-};
-
-/**
- * Структура хранения данных свободных мест
- */
-type FreePlace = {
-  /** id места */
-  place_id: number;
-  /** дата, с которой место считается свободным */
-  date_from?: Date;
-  /** дата, до которой место считается свободным */
-  date_to?: Date;
-  /** id пользователя, занявшего место */
-  customer_user_id: number;
-  /** состояние места */
-  status: PlaceStatus;
-  /** дата, с которой пользователь занял место */
-  customer_date_from?: Date;
-  /** дата, до которой пользователь занял место */
-  customer_date_to?: Date;
-  /** логин пользователя - владельца места */
-  username: string;
-  /** № места */
-  number: number;
-};
-
-/**
- * Структура хранения пользовательского места
- */
-type UserPlace = {
-  /** id места */
-  id: number;
-  /** № места */
-  number: number;
-  /** в случае, если место выставлено в свободное пользование, заполняется данными об этом */
-  free?: FreePlace;
-};
-
-/**
- * Список функций в БД
- */
-const dbFunctions = {
-  /** получить список пользовательских мест */
-  USER_PLACE_LIST: 'park.e_get_user_places',
-  /** получить список свободных мест */
-  GET_FREE_PLACE_LIST: 'park.e_get_free_place_list',
-};
 
 class UserPlaceUpdater {
   private resList: MyPlaceRes[] = [];
@@ -113,10 +52,8 @@ class UserPlaceUpdater {
       res.write('retry: 1000\n\n');
       const username: string = res.locals.jwtPayload.username;
       logger.info('UserPlace SSE add connection', username);
-      const placeObject = await ApiHelper.executeDbFunction<UserPlace[]>(
-        dbFunctions.USER_PLACE_LIST,
-        [username],
-      );
+      const placeObject = await getUserPlaceList(username);
+
       this.resList.push({
         placeList: (placeObject || []).map((el: { id: number }) => el.id),
         res,
@@ -158,10 +95,7 @@ class UserPlaceUpdater {
 
       const username: string = res.locals.jwtPayload.username;
       logger.info('UserPlace SSE add free connection', username);
-      const placeObject = await ApiHelper.executeDbFunction<FreePlace[]>(
-        dbFunctions.GET_FREE_PLACE_LIST,
-        [],
-      );
+      const placeObject = await getFreePlaceList();
       this.freePlList.push({
         res,
         username,
@@ -199,10 +133,7 @@ class UserPlaceUpdater {
     try {
       logger.info('UserPlace SSE add free connection');
       if (this.freePlList.length > 0) {
-        const placeObject = await ApiHelper.executeDbFunction<FreePlace[]>(
-          dbFunctions.GET_FREE_PLACE_LIST,
-          [],
-        );
+        const placeObject = await getFreePlaceList();
         this.freePlList.forEach((fp) => {
           this.sendFreePlaceToUser(placeObject, fp.username, fp.res);
         });
@@ -220,10 +151,7 @@ class UserPlaceUpdater {
   public changePlace = async (place_id: number) => {
     this.resList.forEach(async (resElem: MyPlaceRes) => {
       if (resElem.placeList.indexOf(place_id) >= 0) {
-        const placeObject = await ApiHelper.executeDbFunction<UserPlace[]>(
-          dbFunctions.USER_PLACE_LIST,
-          [resElem.username],
-        );
+        const placeObject = await getUserPlaceList(resElem.username);
         resElem.res.write(`data: ${JSON.stringify(placeObject)}\n\n`);
       }
     });
@@ -239,10 +167,7 @@ class UserPlaceUpdater {
     this.resList.forEach(async (resElem: MyPlaceRes) => {
       for (const place_id of place_ids) {
         if (resElem.placeList.indexOf(place_id) >= 0) {
-          const placeObject = await ApiHelper.executeDbFunction<UserPlace[]>(
-            dbFunctions.USER_PLACE_LIST,
-            [resElem.username],
-          );
+          const placeObject = await getUserPlaceList(resElem.username);
           resElem.res.write(`data: ${JSON.stringify(placeObject)}\n\n`);
           break;
         }
