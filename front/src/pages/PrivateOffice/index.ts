@@ -1,0 +1,1 @@
+export {PrivateOffice as default} from './PrivateOffice';
