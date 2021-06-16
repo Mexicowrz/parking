@@ -22,8 +22,8 @@ COPY . .
 
 WORKDIR /app
 
-#WORKDIR /app/client
-#RUN yarn && yarn build
+WORKDIR /app/client
+RUN yarn && yarn build
 
 WORKDIR /app/back
 RUN yarn && yarn build

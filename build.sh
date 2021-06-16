@@ -1,8 +1,14 @@
 #!/bin/bash
-cd /home/ubuntu/parking/project/parking
+# cd /home/ubuntu/parking/project/parking
+# /home/ubuntu/parking/logs
+LOGSPATH=$1
+if [ "$LOGSPATH" == "" ]
+then
+	LOGSPATH="./logs"
+fi
 docker build -t site_parking-tmp .
 
-    docker logs parking > /home/ubuntu/parking/logs/"park-$(date +"%Y-%m-%d %T").log"
+    docker logs parking > "$LOGSPATH/park-$(date +"%Y-%m-%d %T").log"
 
     docker stop parking
     docker rm parking
@@ -10,4 +16,4 @@ docker build -t site_parking-tmp .
 
     docker tag site_parking-tmp:latest site_parking:latest
     docker rmi site_parking-tmp
-    docker run --name parking -p 3000:3000 -v /home/ubuntu/parking/logs:/home/ubuntu/parking/logs --restart=always -i -t -d site_parking
+    docker run --name parking -p 3000:3000 -v $LOGSPATH:$LOGSPATH --restart=always -i -t -d site_parking
